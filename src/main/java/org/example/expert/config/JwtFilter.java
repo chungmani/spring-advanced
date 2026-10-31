@@ -74,21 +74,11 @@ public class JwtFilter implements Filter { // Servlet의 Filter 인터페이스�
                 return;
             }
 
-            // Claims의 역할 문자열을 UserRole enum으로 변환한다.
-            UserRole userRole = UserRole.valueOf(claims.get("userRole", String.class));
-
             // 같은 요청의 Interceptor나 ArgumentResolver에서 읽을 수 있도록 request attribute에 저장한다.
             // userId는 Long, email과 userRole은 JWT에서 꺼낸 문자열이며 SecurityContext에 저장하는 것은 아니다.
             httpRequest.setAttribute("userId", Long.parseLong(claims.getSubject()));
             httpRequest.setAttribute("email", claims.get("email"));
             httpRequest.setAttribute("userRole", claims.get("userRole"));
-
-            // /admin으로 시작하는 요청의 사용자가 ADMIN이 아니면 403 응답을 작성하고 중단한다.
-            if (url.startsWith("/admin") && !UserRole.ADMIN.equals(userRole)) {
-                log.warn("권한 부족: userId={}, role={}, URI={}", claims.getSubject(), userRole, url);
-                sendErrorResponse(httpResponse, HttpStatus.FORBIDDEN, "접근 권한이 없습니다.");
-                return;
-            }
 
             // 검사에 통과하면 request와 response 객체를 다음 필터 또는 Servlet으로 전달한다.
             // 다음 처리가 끝나면 이 지점으로 돌아온다. 응답 본문 자체를 인자로 넘기는 것은 아니다.
